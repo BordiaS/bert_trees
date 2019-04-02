@@ -9,6 +9,7 @@ source  activate jiant
 port=$(shuf -i 6000-9999 -n 1)
 /usr/bin/ssh -N -f -R $port:localhost:$port log-0
 /usr/bin/ssh -N -f -R $port:localhost:$port log-1
+echo $PATH
 cat<<EOF
 Jupyter server is running on: $(hostname)
 Job starts at: $(date)
