@@ -41,18 +41,12 @@ for sent in sentences :
 
 L=len(sentences)
 
-sent_id = []
-attentions = []
-for idx in attention:
-    sent_id.append(idx)
-    attentions.append(attention[idx])
-    
 
-f= h5py.File('attn.h5','w')
-dt = h5py.special_dtype(vlen=np.dtype('float64','float64'))
-dataset = f.create_dataset('vlen',(L,12,1,12,), dtype=dt)
-dataset.value
-for i in range(len(attentions)):
-    dataset[i]=attentions[i]
-dataset.value
-f.close()    
+
+print("writing weights to the file!!")
+
+with h5py.File('/scratch/sb6416/Ling3340/extract_tree/attn_weights/coref/bert-large-cased.hdf5','w') as f:
+    for idx in attention:
+        f.create_dataset(idx,data=attention[idx],dtype='float64')
+f.close()
+print("done") 
