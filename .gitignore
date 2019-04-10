@@ -1,4 +1,7 @@
+*.out
+*.h5
 *.txt
+utils/*.txt
 *.sbatch
 *.out
 *.err

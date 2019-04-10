@@ -3,10 +3,15 @@ from bertviz.pytorch_pretrained_bert import BertModel, BertTokenizer
 import numpy as np
 import h5py
 import torch
+import random
 
 bert_version = 'bert-base-uncased'
 model = BertModel.from_pretrained(bert_version)
 tokenizer = BertTokenizer.from_pretrained(bert_version)
+
+for name, param in model.named_parameters():
+    if param.requires_grad:
+        param.data.uniform_(-0.1, 0.1)
 
 filename = '/scratch/sb6416/Ling3340/extract_tree/UD_English-PUD/en_pud-ud-test.conllu'
 with open(filename, 'r') as f:

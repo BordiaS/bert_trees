@@ -1,5 +1,6 @@
 import json
 import sys
+from collections import Counter
 
 def get_rb_indices(sent):
    ''' 
@@ -53,12 +54,12 @@ def eval(ref_trees, sys_trees, mode='sys'):
     prec_list = []
     reca_list = []
     f1_list = []
-
+    correct_type = Counter()
+    total_type = Counter()
     assert len(ref_trees)==len(sys_trees), "ref and sys should have same number of sentences"
 
     for i in ref_trees:
-        
-        ref_tree = set(tuple(x) for x in ref_trees[i]['dependencies'])
+        ref_tree = set(tuple(x[0]) for x in ref_trees[i]['dependencies'])
 
         if mode!='sys':
             ref_tree = get_undirected_arcs(ref_tree)
@@ -68,7 +69,15 @@ def eval(ref_trees, sys_trees, mode='sys'):
             sys_tree = get_lb_indices(ref_trees[i]['tokens'])
         else:
             sys_tree = set(tuple(x) for x in sys_trees[i]['dependencies'])
+ 
         overlap = sys_tree.intersection(ref_tree)
+
+        for ref_c in ref_trees[i]['dependencies']:
+            if tuple(ref_c[0]) in sys_tree:
+                correct_type[ref_c[1]] += 1
+            total_type[ref_c[1]] += 1
+
+        
         prec = float(len(overlap)) / (len(sys_tree) + 1e-8)
         reca = float(len(overlap)) / (len(ref_tree) + 1e-8)
 
@@ -82,10 +91,19 @@ def eval(ref_trees, sys_trees, mode='sys'):
         reca_list.append(reca)
         f1_list.append(f1) 
 
-    return mean(f1_list)
+    header_list = []
+    value_list = []
+     
+    for key in correct_type:
+        header_list.append(key)
+        value_list.append(str(correct_type[key]*100.0/total_type[key]))
+    header = '\t'.join(header_list)
+    values = '\t'.join(value_list)
+        #print(key + " : " + str(correct_type[key]*1.0/total_type[key]))
+    return mean(f1_list), header, values
 
 if __name__ == "__main__":
-    ref_tree_path = '/scratch/sb6416/Ling3340/extract_tree/UD_English-PUD/ud_eng_pud.json'
+    ref_tree_path = '/scratch/sb6416/Ling3340/extract_tree/UD_English-PUD/ud_eng_pud_with_type.json'
     sys_tree_path = '/scratch/sb6416/Ling3340/extract_tree/extracted_trees/v1/'+ sys.argv[1] #bert_large__layer00__head00.json' 
 
     with open(ref_tree_path, 'r') as f_ref:
@@ -94,4 +112,8 @@ if __name__ == "__main__":
     with open(sys_tree_path, 'r') as f_sys:
         sys_trees = json.load(f_sys)
 
-    print(sys.argv[1] + '\t' + str(eval(ref_trees, sys_trees, 'lb')))
+    mean_f1, header, values = eval(ref_trees, sys_trees)
+    print(sys.argv[1] + '\t' + str(mean_f1))
+    print(header)
+    print(values)
+    print("===========\n")

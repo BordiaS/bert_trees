@@ -7,11 +7,6 @@ bert_version = 'bert-base-uncased'
 model = BertModel.from_pretrained(bert_version)
 tokenizer = BertTokenizer.from_pretrained(bert_version)
 
-for name, param in model.named_parameters():
-    if param.requires_grad:
-        print(name)
-        param.data.uniform_(-0.1, 0.1)
-
 filename = '/scratch/sb6416/Ling3340/extract_tree/UD_English-PUD/en_pud-ud-test.conllu'
 with open(filename, 'r') as f:
     data = f.readlines()
@@ -46,18 +41,12 @@ for sent in sentences :
 
 L=len(sentences)
 
-sent_id = []
-attentions = []
-for idx in attention:
-    sent_id.append(idx)
-    attentions.append(attention[idx])
-    
 
-f= h5py.File('random_attn.h5','w')
-dt = h5py.special_dtype(vlen=np.dtype('float64','float64'))
-dataset = f.create_dataset('vlen',(L,12,1,12,), dtype=dt)
-dataset.value
-for i in range(len(attentions)):
-    dataset[i]=attentions[i]
-dataset.value
-f.close()    
+
+print("writing weights to the file!!")
+
+with h5py.File('/scratch/sb6416/Ling3340/extract_tree/attn_weights/coref/bert-large-cased.hdf5','w') as f:
+    for idx in attention:
+        f.create_dataset(idx,data=attention[idx],dtype='float64')
+f.close()
+print("done") 
