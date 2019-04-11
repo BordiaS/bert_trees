@@ -91,20 +91,24 @@ def eval(ref_trees, sys_trees, mode='sys'):
         reca_list.append(reca)
         f1_list.append(f1) 
 
-    header_list = []
+    header_list = "acl,acl:relcl,advcl,advmod,amod,appos,aux,aux:pass,case,cc,ccomp,compound,conj,cop,csubj,csubj:pass,dep,det,det:predet,expl,fixed,flat,iobj,mark,nmod,nmod:npmod,nmod:poss,nmod:tmod,nsubj,nsubj:pass,nummod,obj,obl,obl:tmod,parataxis,punct,root,vocative,xcomp".split(',')
     value_list = []
-     
-    for key in correct_type:
-        header_list.append(key)
-        value_list.append(str(correct_type[key]*100.0/total_type[key]))
-    header = '\t'.join(header_list)
-    values = '\t'.join(value_list)
+    
+    for key in header_list:
+        if key in total_type:
+            value_list.append(str(correct_type[key]*100.0/total_type[key]))
+        else:
+            value_list.append("0")
+    header = ','.join(header_list)
+    values = ','.join(value_list)
         #print(key + " : " + str(correct_type[key]*1.0/total_type[key]))
     return mean(f1_list), header, values
 
 if __name__ == "__main__":
+    base_dir=sys.argv[1]
     ref_tree_path = '/scratch/sb6416/Ling3340/extract_tree/UD_English-PUD/ud_eng_pud_with_type.json'
-    sys_tree_path = '/scratch/sb6416/Ling3340/extract_tree/extracted_trees/v1/'+ sys.argv[1] #bert_large__layer00__head00.json' 
+
+    sys_tree_path = base_dir+'/'+ sys.argv[2] #bert_large__layer00__head00.json' 
 
     with open(ref_tree_path, 'r') as f_ref:
         ref_trees = json.load(f_ref)
@@ -113,7 +117,7 @@ if __name__ == "__main__":
         sys_trees = json.load(f_sys)
 
     mean_f1, header, values = eval(ref_trees, sys_trees)
-    print(sys.argv[1] + '\t' + str(mean_f1))
-    print(header)
-    print(values)
-    print("===========\n")
+    #print(sys.argv[2] + ',' + str(mean_f1))
+    #print(header)
+    print(sys.argv[2]+  ',' + str(mean_f1) +  "," + values)
+    #print("===========\n")

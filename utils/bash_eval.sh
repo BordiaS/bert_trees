@@ -1,6 +1,7 @@
-file_path=../extracted_trees_random/
-#file_path=/scratch/sb6416/Ling3340/extract_tree/extracted_trees/v1/
-for f in $(ls /scratch/sb6416/Ling3340/extract_tree/extracted_trees_random/)
+file_path=/scratch/sb6416/Ling3340/extract_tree/extracted_trees/v1/
+#file_path=/scratch/sb6416/Ling3340/extract_tree/extracted_trees_random/
+echo "Layers,F1,acl,acl:relcl,advcl,advmod,amod,appos,aux,aux:pass,case,cc,ccomp,compound,conj,cop,csubj,csubj:pass,dep,det,det:predet,expl,fixed,flat,iobj,mark,nmod,nmod:npmod,nmod:poss,nmod:tmod,nsubj,nsubj:pass,nummod,obj,obl,obl:tmod,parataxis,punct,root,vocative,xcomp" >> parse_eval.csv 2>&1 
+for f in $(ls $file_path)
 do
-    python eval.py $f >> parse_eval_random_newformat.txt 2>&1 
+    python eval.py $file_path $f >> parse_eval.csv 2>&1 
 done
