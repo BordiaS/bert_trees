@@ -25,7 +25,10 @@ def save_gt_trees(filename):
                 if sent:
                     sent['dependencies'] = arcs
                     sent['tokens'] = tokens
+<<<<<<< HEAD
                     sent['dep_type'] = dep_type
+=======
+>>>>>>> a4df8c416d6466e8b9912bea8d1f6a2663ae666e
                     sentences[sentence_id] = sent
                     
                     sent = {}
@@ -40,9 +43,13 @@ def save_gt_trees(filename):
         else:
             columns = line.rstrip("\r\n").split()
             try:
+<<<<<<< HEAD
                 dep_type = columns[7].strip()
                 arc = ((int(columns[0]), int(columns[6])), dep_type)
                 print(dep_type)
+=======
+                arc = (int(columns[0]), int(columns[6]))
+>>>>>>> a4df8c416d6466e8b9912bea8d1f6a2663ae666e
             except:
                 print("line: ", line)
                 continue
@@ -52,7 +59,11 @@ def save_gt_trees(filename):
 
 
 
+<<<<<<< HEAD
     with open('/scratch/sb6416/Ling3340/extract_tree/UD_English-PUD/ud_eng_pud_with_type.json', 'w') as f:
+=======
+    with open('/scratch/sb6416/Ling3340/extract_tree/UD_English-PUD/ud_eng_pud.json', 'w') as f:
+>>>>>>> a4df8c416d6466e8b9912bea8d1f6a2663ae666e
         json.dump(sentences,f)
 
 

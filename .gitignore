@@ -2,6 +2,8 @@
 *.h5
 *.txt
 utils/*.txt
+*.txt
+*.pyc
 *.sbatch
 *.out
 *.err
