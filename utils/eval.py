@@ -1,9 +1,6 @@
 import json
 import sys
-<<<<<<< HEAD
 from collections import Counter
-=======
->>>>>>> a4df8c416d6466e8b9912bea8d1f6a2663ae666e
 
 def get_rb_indices(sent):
    ''' 
@@ -57,21 +54,18 @@ def eval(ref_trees, sys_trees, mode='sys'):
     prec_list = []
     reca_list = []
     f1_list = []
-<<<<<<< HEAD
     correct_type = Counter()
     total_type = Counter()
     assert len(ref_trees)==len(sys_trees), "ref and sys should have same number of sentences"
 
     for i in ref_trees:
         ref_tree = set(tuple(x[0]) for x in ref_trees[i]['dependencies'])
-=======
 
     assert len(ref_trees)==len(sys_trees), "ref and sys should have same number of sentences"
 
     for i in ref_trees:
         
         ref_tree = set(tuple(x) for x in ref_trees[i]['dependencies'])
->>>>>>> a4df8c416d6466e8b9912bea8d1f6a2663ae666e
 
         if mode!='sys':
             ref_tree = get_undirected_arcs(ref_tree)
@@ -81,7 +75,6 @@ def eval(ref_trees, sys_trees, mode='sys'):
             sys_tree = get_lb_indices(ref_trees[i]['tokens'])
         else:
             sys_tree = set(tuple(x) for x in sys_trees[i]['dependencies'])
-<<<<<<< HEAD
  
         overlap = sys_tree.intersection(ref_tree)
 
@@ -91,9 +84,6 @@ def eval(ref_trees, sys_trees, mode='sys'):
             total_type[ref_c[1]] += 1
 
         
-=======
-        overlap = sys_tree.intersection(ref_tree)
->>>>>>> a4df8c416d6466e8b9912bea8d1f6a2663ae666e
         prec = float(len(overlap)) / (len(sys_tree) + 1e-8)
         reca = float(len(overlap)) / (len(ref_tree) + 1e-8)
 
@@ -107,7 +97,6 @@ def eval(ref_trees, sys_trees, mode='sys'):
         reca_list.append(reca)
         f1_list.append(f1) 
 
-<<<<<<< HEAD
     header_list = "acl,acl:relcl,advcl,advmod,amod,appos,aux,aux:pass,case,cc,ccomp,compound,conj,cop,csubj,csubj:pass,dep,det,det:predet,expl,fixed,flat,iobj,mark,nmod,nmod:npmod,nmod:poss,nmod:tmod,nsubj,nsubj:pass,nummod,obj,obl,obl:tmod,parataxis,punct,root,vocative,xcomp".split(',')
     value_list = []
     
@@ -118,7 +107,6 @@ def eval(ref_trees, sys_trees, mode='sys'):
             value_list.append("0")
     header = ','.join(header_list)
     values = ','.join(value_list)
-        #print(key + " : " + str(correct_type[key]*1.0/total_type[key]))
     return mean(f1_list), header, values
 
 if __name__ == "__main__":
@@ -126,13 +114,7 @@ if __name__ == "__main__":
     ref_tree_path = '/scratch/sb6416/Ling3340/extract_tree/UD_English-PUD/ud_eng_pud_with_type.json'
 
     sys_tree_path = base_dir+'/'+ sys.argv[2] #bert_large__layer00__head00.json' 
-=======
-    return mean(f1_list)
 
-if __name__ == "__main__":
-    ref_tree_path = '/scratch/sb6416/Ling3340/extract_tree/UD_English-PUD/ud_eng_pud.json'
-    sys_tree_path = '/scratch/sb6416/Ling3340/extract_tree/extracted_trees/v1/'+ sys.argv[1] #bert_large__layer00__head00.json' 
->>>>>>> a4df8c416d6466e8b9912bea8d1f6a2663ae666e
 
     with open(ref_tree_path, 'r') as f_ref:
         ref_trees = json.load(f_ref)
@@ -140,12 +122,6 @@ if __name__ == "__main__":
     with open(sys_tree_path, 'r') as f_sys:
         sys_trees = json.load(f_sys)
 
-<<<<<<< HEAD
     mean_f1, header, values = eval(ref_trees, sys_trees)
-    #print(sys.argv[2] + ',' + str(mean_f1))
     #print(header)
     print(sys.argv[2]+  ',' + str(mean_f1) +  "," + values)
-    #print("===========\n")
-=======
-    print(sys.argv[1] + '\t' + str(eval(ref_trees, sys_trees, 'lb')))
->>>>>>> a4df8c416d6466e8b9912bea8d1f6a2663ae666e
