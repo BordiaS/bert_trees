@@ -3,16 +3,13 @@
 #SBATCH --nodes=1
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=1
-#SBATCH --mem=20GB
-#SBATCH --time=50:00:00
+#SBATCH --mem=10GB
+#SBATCH --time=24:00:00
 source  activate jiant
 port=$(shuf -i 6000-9999 -n 1)
 /usr/bin/ssh -N -f -R $port:localhost:$port log-0
 /usr/bin/ssh -N -f -R $port:localhost:$port log-1
-<<<<<<< HEAD
 echo $PATH
-=======
->>>>>>> a4df8c416d6466e8b9912bea8d1f6a2663ae666e
 cat<<EOF
 Jupyter server is running on: $(hostname)
 Job starts at: $(date)
