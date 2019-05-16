@@ -3,11 +3,17 @@ from bertviz.pytorch_pretrained_bert import BertModel, BertTokenizer
 import numpy as np
 import h5py
 
-bert_version = 'bert-base-uncased'
+bert_version = 'bert-large-uncased'
 model = BertModel.from_pretrained(bert_version)
 tokenizer = BertTokenizer.from_pretrained(bert_version)
 
-filename = '/scratch/sb6416/Ling3340/extract_tree/UD_English-PUD/en_pud-ud-test.conllu'
+
+for name, param in model.named_parameters():
+    if param.requires_grad:
+        param.data.uniform_(-0.1, 0.1)
+
+
+filename = '/misc/vlgscratch4/BowmanGroup/datasets/bert_trees/en_pud-ud-test.conllu'
 with open(filename, 'r') as f:
     data = f.readlines()
 i=0
@@ -44,8 +50,8 @@ L=len(sentences)
 
 
 print("writing weights to the file!!")
-
-with h5py.File('/scratch/sb6416/Ling3340/extract_tree/attn_weights/coref/bert-large-cased.hdf5','w') as f:
+with h5py.File('/misc/vlgscratch4/BowmanGroup/datasets/bert_trees/random_bert_large_uncased.hdf5','w') as f:
+#with h5py.File('/scratch/sb6416/Ling3340/extract_tree/attn_weights/coref/bert-large-cased.hdf5','w') as f:
     for idx in attention:
         f.create_dataset(idx,data=attention[idx],dtype='float64')
 f.close()

@@ -6,11 +6,11 @@ import os
 import tqdm
 import unicodedata
 
-import bert_trees.extract_mst
+import extract_mst
 
 
 def export_tree(attn_arr, root_i):
-    mst = bert_trees.extract_mst.get_mst_from_attn(attn_arr, root_i)
+    mst = extract_mst.get_mst_from_attn(attn_arr, root_i)
     out_arc_ls = [[root_i, -1]]
     for arc in mst.values():
         out_arc_ls.append([arc.tail, arc.head])
@@ -133,7 +133,61 @@ def compress_bert_attn(attn_arr, bert_map):
     return x3
 
 
-def mass_extract(ud_input_path, bert_input_path, tokens_path, output_base_path):
+def mass_extract(ud_input_path, bert_input_path, tokens_path, output_base_path, fname):
+    os.makedirs(output_base_path, exist_ok=True)
+    data = load_ud_json(ud_input_path)
+    tokens = load_tokens(tokens_path)
+    f = h5py.File(bert_input_path, "r")
+    print("Loading bert attentions")
+    full_arr_dict = {
+        sent_id: np.squeeze(np.array(f[sent_id.strip()]), 1)
+        for sent_id in data
+    }
+    num_layers, num_heads, _, _ = full_arr_dict[list(full_arr_dict.keys())[0]].shape
+
+    for layer_i in tqdm.trange(num_layers):
+        for head_i in tqdm.trange(num_heads):
+            output_dict = {}
+            for sent_id, datum in tqdm.tqdm(data.items()):
+                arr = full_arr_dict[sent_id]
+                raw_gold_tokens = datum["tokens"]
+                raw_bert_tokens = tokens[sent_id.strip()]
+                gold_map, bert_map = get_token_map(
+                    raw_gold_tokens,
+                    raw_bert_tokens,
+                )
+                attn_arr = arr[layer_i, head_i, 1:-1, 1:-1]
+                compressed_bert_attn = compress_bert_attn(attn_arr, bert_map)
+                bert_root = get_remapped_bert_root(datum["root"], gold_map)
+                raw_tree = export_tree(compressed_bert_attn, bert_root)
+                adjusted_tree, node_map = adjust_tree(raw_tree, gold_map, 1)
+                output_dict[sent_id] = {"dependencies": adjusted_tree}
+            file_name = f"tree_{fname}_layer{layer_i:02d}__head{head_i:02d}.json"
+            with open(os.path.join(output_base_path, file_name), "w") as f:
+                f.write(json.dumps(output_dict))
+
+def get_undirected_attn(attn_matrix):
+    zeros_mat = np.zeros_like(attn_matrix)
+
+    for i in range(attn_matrix.shape[0]):
+        for j in range(i, attn_matrix.shape[1]):
+            zeros_mat[i][j] = attn_matrix[i][j] \
+                if (attn_matrix[i][j] > attn_matrix[j][i]) else attn_matrix[j][i]
+    return zeros_mat            
+
+
+def exclude_diagonals(attn_matrix):
+    for i in range(attn_matrix.shape[0]):
+        attn_matrix[i][i]=-1
+    return attn_matrix
+
+def get_max_relations(attn_matrix,no_diagonal=False):
+    if no_diagonal:
+        attn_matrix=exclude_diagonals(attn_matrix)
+    max_relations = attn_matrix.argmax(axis=1)+1
+    return list(zip(range(1,len(max_relations)+1),max_relations.tolist())) 
+
+def mass_extract_dependencies(ud_input_path, bert_input_path, tokens_path, output_base_path, fname, undirected=False):
     os.makedirs(output_base_path, exist_ok=True)
     data = load_ud_json(ud_input_path)
     tokens = load_tokens(tokens_path)
@@ -159,27 +213,38 @@ def mass_extract(ud_input_path, bert_input_path, tokens_path, output_base_path):
                 )
                 attn_arr = arr[layer_i, head_i, 1:-1, 1:-1]
                 compressed_bert_attn = compress_bert_attn(attn_arr, bert_map)
-                bert_root = get_remapped_bert_root(datum["root"], gold_map)
-                raw_tree = export_tree(compressed_bert_attn, bert_root)
-                adjusted_tree, node_map = adjust_tree(raw_tree, gold_map, 1)
-                output_dict[sent_id] = {"dependencies": adjusted_tree}
-            file_name = f"bert_large__layer{layer_i:02d}__head{head_i:02d}.json"
+                if undirected:
+                    compressed_bert_attn = get_undirected_attn(compressed_bert_attn)
+                relations = get_max_relations(compressed_bert_attn)
+                output_dict[sent_id] = {"dependencies": relations}
+            if undirected:
+                file_name = f"undirected_rel_{fname}_layer{layer_i:02d}__head{head_i:02d}.json"
+            else:
+                file_name = f"nodiag_rel_{fname}_layer{layer_i:02d}__head{head_i:02d}.json"
             with open(os.path.join(output_base_path, file_name), "w") as f:
                 f.write(json.dumps(output_dict))
-
-
+            print("done writing to: ", file_name)
+                
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ud_input_path", required=True)
-    parser.add_argument("--bert_input_path", required=True)
-    parser.add_argument("--tokens_path", required=True)
-    parser.add_argument("--output_base_path", required=True)
+    parser.add_argument("--ud_input_path", required=True, \
+                        default='/misc/vlgscratch4/BowmanGroup/datasets/bert_trees/ud_eng_pud_with_type.json')
+    parser.add_argument("--bert_input_path", required=True, \
+                       default='/misc/vlgscratch4/BowmanGroup/datasets/bert_trees/bert-large-uncased.hdf5')
+    parser.add_argument("--tokens_path", required=True, \
+                       default='/misc/vlgscratch4/BowmanGroup/datasets/bert_trees/bert-large-uncased')
+    parser.add_argument("--output_base_path", required=True, \
+                       default='/misc/vlgscratch4/BowmanGroup/pmh330/LINGA_outputs/bert_large_ud')
+    parser.add_argument("--undirected", action="store_true")
     args = parser.parse_args()
+    fname= args.bert_input_path.rsplit('/',1)[1].split('.')[0].strip()
+    print("fname: ", fname)
     mass_extract(
         ud_input_path=args.ud_input_path,
         bert_input_path=args.bert_input_path,
         tokens_path=args.tokens_path,
         output_base_path=args.output_base_path,
+        fname=fname,
     )
 
 

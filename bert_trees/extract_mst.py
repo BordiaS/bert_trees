@@ -1,5 +1,5 @@
 import pandas as pd
-from bert_trees.ext.min_spanning_arborescence import min_spanning_arborescence, Arc
+from ext.min_spanning_arborescence import min_spanning_arborescence, Arc
 
 
 def get_mst_from_attn(attn, root):
