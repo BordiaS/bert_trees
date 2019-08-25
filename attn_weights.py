@@ -10,7 +10,6 @@ def save_attn_weights(model, bert_version, output_path):
     filename = '/scratch/sb6416/Ling3340/extract_tree/UD_English-PUD/en_pud-ud-test.conllu'
     with open(filename, 'r') as f:
         data = f.readlines()
-    i = 0
     sentences = {}
 
     for i in range(1, len(data)):
